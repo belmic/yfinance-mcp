@@ -32,4 +32,3 @@ ENV PYTHONUNBUFFERED=1
 #   yfmcp --transport http --host 0.0.0.0 --port $PORT
 # но запасной ENTRYPOINT лишним не будет
 ENTRYPOINT []
-CMD ["/bin/sh","-c","yfmcp --transport http --host 0.0.0.0 --port ${PORT:-8000}"]
