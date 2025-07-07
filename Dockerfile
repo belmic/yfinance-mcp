@@ -1,36 +1,34 @@
-# syntax=docker/dockerfile:1.4
+# syntax=docker/dockerfile:1.4        # включает расширенный синтаксис BuildKit
 
-########### STAGE 1: build with uv ###########
-FROM ghcr.io/astral-sh/uv:python3.12-bookworm-slim AS build
-WORKDIR /app
-
-# если они у вас есть – скопировать файлы зависимостей
-COPY pyproject.toml uv.lock ./
-
-# === УБРАЛИ cache-mount ===
-RUN uv sync --frozen --no-install-project --no-dev --no-editable
-
-# код приложения
-ADD . /app
-RUN uv sync --frozen --no-dev --no-editable
-
-########### STAGE 2: final image ###########
+########################################################################
+# БАЗОВЫЙ ОБРАЗ
+########################################################################
 FROM python:3.12-slim-bookworm
 
-# создаём системного пользователя, чтобы сработал --chown
+# ──────────────────────────────────────────────────────────────────────
+# 1. Создаём системного пользователя, чтобы не запускать root-процесс
+# ──────────────────────────────────────────────────────────────────────
 RUN adduser --disabled-login --gecos "" app
 
+########################################################################
+# 2. Копируем исходники и устанавливаем зависимости
+########################################################################
 WORKDIR /app
-COPY --from=build --chown=app:app /app/.venv /app/.venv
-COPY --from=build --chown=app:app /app /app
 
-ENV PATH="/app/.venv/bin:$PATH"
+# скопируем всё приложение целиком (Docker корректно кеширует слои)
+COPY . .
 
-ENTRYPOINT ["yfmcp"]
+# обновляем pip и ставим зависимости
+RUN pip install --upgrade pip && \
+    pip install .
 
+########################################################################
+# 3. Финальная конфигурация и команда запуска
+########################################################################
+USER app            # запускаем под непривилегированным пользователем
+ENV PYTHONUNBUFFERED=1
 
-COPY --from=uv --chown=app:app /app/.venv /app/.venv
-
-ENV PATH="/app/.venv/bin:$PATH"
-
+# Railway подменит на ваш Start Command:
+#   yfmcp --transport http --host 0.0.0.0 --port $PORT
+# но запасной ENTRYPOINT лишним не будет
 ENTRYPOINT ["yfmcp"]
