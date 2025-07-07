@@ -31,4 +31,5 @@ ENV PYTHONUNBUFFERED=1
 # Railway подменит на ваш Start Command:
 #   yfmcp --transport http --host 0.0.0.0 --port $PORT
 # но запасной ENTRYPOINT лишним не будет
-ENTRYPOINT ["yfmcp"]
+ENTRYPOINT []
+CMD ["/bin/sh","-c","yfmcp --transport http --host 0.0.0.0 --port ${PORT:-8000}"]
