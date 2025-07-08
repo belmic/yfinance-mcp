@@ -7,4 +7,5 @@ COPY . .
 RUN pip install --no-cache-dir yfinance-mcp   # ← CLI попадает в /usr/local/bin
 
 EXPOSE 8000
+RUN which yfmcp && yfmcp --version
 CMD ["yfmcp", "--transport", "http", "--host", "0.0.0.0", "--port", "8000"]
